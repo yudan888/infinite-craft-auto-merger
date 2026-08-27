@@ -18,6 +18,7 @@
     ytPlayerId: 'auto-combo-yt-player',
     filterNumbersCheckboxId: 'auto-combo-filter-numbers',
     speedSelectId: 'auto-combo-speed-select',
+    modeSelectId: 'auto-combo-mode-select', // <--- New Setting added
     debugMarkerClass: 'auto-combo-debug-marker',
 
     speedPresets: {
@@ -73,7 +74,7 @@
       this.setupEvents();
       this.observeDOM();
       this.scanItems();
-      this.logStatus('Ready V5.5');
+      this.logStatus('Ready V6.0 (Doubles)');
     }
 
     injectStyles() {
@@ -129,7 +130,7 @@
         .${CONFIG.suggestionItemClass}:hover { background:#07f;color:white }
         #${CONFIG.statusBoxId} {
           padding:4px;text-align:center;font-size:10px;background:#f9f9f9;
-          border:1px solid #e5e5e5;border-radius:3px;min-height:24px
+          border:1px solid #e5e5e5;border-radius:3px;min-height:24px;word-wrap:break-word;
         }
         #${CONFIG.firstDiscoveryBoxId} {
           padding:4px;text-align:center;font-weight:bold;font-size:11px;
@@ -159,7 +160,7 @@
       this.panel.id = CONFIG.panelId;
       this.panel.innerHTML = `
         <div class="auto-combo-drag-bar" id="auto-combo-drag-handle">
-          <span class="auto-combo-title-text">⠿ ✨ Auto Combiner V5.5</span>
+          <span class="auto-combo-title-text">⠿ ✨ Auto Combiner V6.0</span>
           <div class="auto-combo-win-controls">
             <button class="auto-combo-win-btn" id="auto-combo-minimize-btn" title="Minimize/Maximize">–</button>
             <button class="auto-combo-win-btn" id="auto-combo-close-btn" title="Close">×</button>
@@ -168,14 +169,22 @@
         <div class="auto-combo-content" id="auto-combo-content-area">
           <input id="${CONFIG.targetInputId}" placeholder="Target Element" autocomplete="off">
           <div id="${CONFIG.suggestionBoxId}"></div>
-          <select id="${CONFIG.speedSelectId}">
-            <option value="slow">🐌 Slow</option>
-            <option value="normal">⚡ Normal</option>
-            <option value="medium">⏱️ Medium</option>
-            <option value="fast">🚀 Fast</option>
-            <option value="turbo">💨 Turbo</option>
-            <option value="nitro">🔥 Nitro</option>
-          </select>
+          
+          <div style="display:flex; gap:4px;">
+            <select id="${CONFIG.speedSelectId}" style="flex:1;">
+              <option value="slow">🐌 Slow</option>
+              <option value="normal">⚡ Normal</option>
+              <option value="medium">⏱️ Medium</option>
+              <option value="fast">🚀 Fast</option>
+              <option value="turbo">💨 Turbo</option>
+              <option value="nitro">🔥 Nitro</option>
+            </select>
+            <select id="${CONFIG.modeSelectId}" style="flex:1;">
+              <option value="singles">🧍‍♂️ Singles</option>
+              <option value="doubles">👯 Doubles</option>
+            </select>
+          </div>
+
           <label class="filter-wrapper">
             <input type="checkbox" id="${CONFIG.filterNumbersCheckboxId}" checked> 🏷️ Ignore Numbers
           </label>
@@ -199,7 +208,7 @@
         'targetInput', 'suggestionBox', 'statusBox', 'firstDiscoveryBox',
         'startButton', 'randomButton', 'stopButton', 'clearCanvasButton',
         'clearFailedButton', 'muteButton', 'ytInput', 'ytPlayer',
-        'filterNumbersCheckbox', 'speedSelect'
+        'filterNumbersCheckbox', 'speedSelect', 'modeSelect'
       ]) {
         const id = CONFIG[`${key}Id`];
         this[key] = this.panel.querySelector(`#${id}`);
@@ -530,43 +539,66 @@
       }
 
       this.isRunning = true;
+      const isDoubles = this.modeSelect.value === 'doubles';
+      const step = isDoubles ? 2 : 1;
 
       this.logStatus(`🚀 Starting Target... (${items.length})`);
 
-      for (let i = 0; i < items.length && this.isRunning; i++) {
-        const itemName = items[i];
-        const progress = `${i + 1}/${items.length}`;
-        const comboKey = this.getComboKey(targetName, itemName);
+      for (let i = 0; i < items.length && this.isRunning; i += step) {
+        const item1Name = items[i];
+        const item2Name = isDoubles && (i + 1 < items.length) ? items[i + 1] : null;
 
-        if (this.failedCombos.has(comboKey)) continue;
+        const comboKey1 = this.getComboKey(targetName, item1Name);
+        const comboKey2 = item2Name ? this.getComboKey(targetName, item2Name) : null;
 
-        const target = this.getElement(targetName);
-        const source = this.getElement(itemName);
-        if (!target || !source) continue;
+        let tasks = [];
+        if (!this.failedCombos.has(comboKey1)) {
+          tasks.push({ source: item1Name, target: targetName, key: comboKey1, yOffset: 0 });
+        }
+        if (item2Name && !this.failedCombos.has(comboKey2)) {
+          tasks.push({ source: item2Name, target: targetName, key: comboKey2, yOffset: -120 });
+        }
+
+        if (tasks.length === 0) continue;
 
         const before = new Set(this.itemElementMap.keys());
-        this.logStatus(`⏳ ${progress}: ${itemName}`);
+        
+        // Log both actions
+        const progress = isDoubles && tasks.length > 1 
+          ? `${i + 1}-${i + 2}/${items.length}` 
+          : `${i + 1}/${items.length}`;
+        const logNames = tasks.map(t => t.source).join(' & ');
+        this.logStatus(`⏳ ${progress}: ${logNames}`);
 
         try {
-          await this.simulateCombo(source, target);
+          const dropX = window.innerWidth / 3;
+          const dropY = window.innerHeight / 2;
+
+          for (const task of tasks) {
+            const srcEl = this.getElement(task.source);
+            const tgtEl = this.getElement(task.target);
+            if (srcEl && tgtEl) {
+              await this.simulateCombo(srcEl, tgtEl, dropX, dropY + task.yOffset);
+            }
+          }
+
           if (!this.isRunning) break;
 
           await this.wait(CONFIG.postComboScanDelay);
           this.scanItems();
           this.checkAndIncrementFirstDiscovery();
 
-          const newItem = [...this.itemElementMap.keys()].find(name => !before.has(name));
+          const newItems = [...this.itemElementMap.keys()].filter(name => !before.has(name));
 
-          if (newItem) {
-            this.logStatus(`✨ Found: ${newItem}!`);
+          if (newItems.length > 0) {
+            this.logStatus(`✨ Found: ${newItems.join(', ')}!`);
           } else {
-            this.failedCombos.add(comboKey);
+            tasks.forEach(t => this.failedCombos.add(t.key));
             this.saveFailedCombos();
             this.logStatus(`❌ Fail ${progress}`);
           }
 
-          this.comboCounter++;
-
+          this.comboCounter += tasks.length;
           await this.wait(CONFIG.interComboDelay);
         } catch (error) {
           console.error('[AutoCombo]', error);
@@ -586,8 +618,19 @@
 
       this.isRunning = true;
       this.isRandomLooping = true;
+      const isDoubles = this.modeSelect.value === 'doubles';
 
       this.logStatus('🎲 Randomizing...');
+
+      const getValidPair = (validItems) => {
+        let a, b, attempts = 0;
+        do {
+          a = validItems[Math.floor(Math.random() * validItems.length)];
+          b = validItems[Math.floor(Math.random() * validItems.length)];
+          attempts++;
+        } while ((a === b || this.failedCombos.has(this.getComboKey(a, b))) && attempts < 50);
+        return { a, b, key: this.getComboKey(a, b) };
+      };
 
       while (this.isRunning && this.isRandomLooping) {
         this.scanItems();
@@ -598,48 +641,48 @@
           break;
         }
 
-        let item1Name = validItems[Math.floor(Math.random() * validItems.length)];
-        let item2Name = validItems[Math.floor(Math.random() * validItems.length)];
-        let attempts = 0;
+        const pair1 = getValidPair(validItems);
+        const pair2 = isDoubles ? getValidPair(validItems) : null;
 
-        while (
-          (item1Name === item2Name || this.failedCombos.has(this.getComboKey(item1Name, item2Name))) &&
-          attempts < 50
-        ) {
-          item1Name = validItems[Math.floor(Math.random() * validItems.length)];
-          item2Name = validItems[Math.floor(Math.random() * validItems.length)];
-          attempts++;
-        }
+        const tasks = [{ src: pair1.a, tgt: pair1.b, key: pair1.key, yOffset: 0 }];
+        if (pair2) tasks.push({ src: pair2.a, tgt: pair2.b, key: pair2.key, yOffset: -120 });
 
-        const source = this.getElement(item1Name);
-        const target = this.getElement(item2Name);
-
-        if (!source || !target) continue;
-
-        const comboKey = this.getComboKey(item1Name, item2Name);
         const before = new Set(this.itemElementMap.keys());
-        this.logStatus(`🔀 ${item1Name} + ${item2Name}`);
+        
+        // Log both sets
+        const logMsg = tasks.map(t => `${t.src} + ${t.tgt}`).join(' AND ');
+        this.logStatus(`🔀 ${logMsg}`);
 
         try {
-          await this.simulateCombo(source, target);
+          const dropX = window.innerWidth / 3;
+          const dropY = window.innerHeight / 2;
+
+          for (const task of tasks) {
+            const srcEl = this.getElement(task.src);
+            const tgtEl = this.getElement(task.tgt);
+            if (srcEl && tgtEl) {
+              await this.simulateCombo(srcEl, tgtEl, dropX, dropY + task.yOffset);
+            }
+          }
+
           if (!this.isRunning) break;
 
           await this.wait(CONFIG.postComboScanDelay);
           this.scanItems();
           this.checkAndIncrementFirstDiscovery();
 
-          const newItem = [...this.itemElementMap.keys()].find(name => !before.has(name));
+          const newItems = [...this.itemElementMap.keys()].filter(name => !before.has(name));
 
-          if (newItem) {
-            this.logStatus(`✨ Found: ${newItem}!`);
+          if (newItems.length > 0) {
+            this.logStatus(`✨ Found: ${newItems.join(', ')}!`);
           } else {
-            this.failedCombos.add(comboKey);
+            // Only flag as failed if nothing generated from the batch to prevent false failures
+            tasks.forEach(t => this.failedCombos.add(t.key));
             this.saveFailedCombos();
-            this.logStatus(`❌ ${item1Name} + ${item2Name}`);
+            this.logStatus(`❌ ${logMsg}`);
           }
 
-          this.comboCounter++;
-
+          this.comboCounter += tasks.length;
           await this.wait(CONFIG.interComboDelay);
         } catch (error) {
           console.error('[AutoCombo]', error);
@@ -670,9 +713,9 @@
       window.infCraftAutoComboInstance = null;
     }
 
-    async simulateCombo(source, target) {
-      const dropX = window.innerWidth / 3;
-      const dropY = window.innerHeight / 2;
+    async simulateCombo(source, target, dropX, dropY) {
+      dropX = dropX || window.innerWidth / 3;
+      dropY = dropY || window.innerHeight / 2;
 
       await this.dispatchFullDragSequence(target, dropX, dropY, '#f64');
       await this.wait(CONFIG.dragBetweenDelay);
