@@ -18,7 +18,7 @@
     ytPlayerId: 'auto-combo-yt-player',
     filterNumbersCheckboxId: 'auto-combo-filter-numbers',
     speedSelectId: 'auto-combo-speed-select',
-    modeSelectId: 'auto-combo-mode-select', // <--- New Setting added
+    modeSelectId: 'auto-combo-mode-select',
     debugMarkerClass: 'auto-combo-debug-marker',
 
     speedPresets: {
@@ -74,7 +74,7 @@
       this.setupEvents();
       this.observeDOM();
       this.scanItems();
-      this.logStatus('Ready V6.0 (Doubles)');
+      this.logStatus('Ready V6.1 (Per-Combo Tracking)');
     }
 
     injectStyles() {
@@ -160,7 +160,7 @@
       this.panel.id = CONFIG.panelId;
       this.panel.innerHTML = `
         <div class="auto-combo-drag-bar" id="auto-combo-drag-handle">
-          <span class="auto-combo-title-text">⠿ ✨ Auto Combiner V6.0</span>
+          <span class="auto-combo-title-text">⠿ ✨ Auto Combiner V6.1</span>
           <div class="auto-combo-win-controls">
             <button class="auto-combo-win-btn" id="auto-combo-minimize-btn" title="Minimize/Maximize">–</button>
             <button class="auto-combo-win-btn" id="auto-combo-close-btn" title="Close">×</button>
@@ -561,9 +561,6 @@
 
         if (tasks.length === 0) continue;
 
-        const before = new Set(this.itemElementMap.keys());
-        
-        // Log both actions
         const progress = isDoubles && tasks.length > 1 
           ? `${i + 1}-${i + 2}/${items.length}` 
           : `${i + 1}/${items.length}`;
@@ -574,31 +571,49 @@
           const dropX = window.innerWidth / 3;
           const dropY = window.innerHeight / 2;
 
-          for (const task of tasks) {
+          const taskResults = [];
+          const newItemsAll = [];
+
+          for (let tIdx = 0; tIdx < tasks.length && this.isRunning; tIdx++) {
+            const task = tasks[tIdx];
+            const before = new Set(this.itemElementMap.keys());
+
             const srcEl = this.getElement(task.source);
             const tgtEl = this.getElement(task.target);
             if (srcEl && tgtEl) {
               await this.simulateCombo(srcEl, tgtEl, dropX, dropY + task.yOffset);
             }
+
+            if (!this.isRunning) break;
+
+            await this.wait(CONFIG.postComboScanDelay);
+            this.scanItems();
+            this.checkAndIncrementFirstDiscovery();
+
+            const newItems = [...this.itemElementMap.keys()].filter(name => !before.has(name));
+            if (newItems.length > 0) {
+              taskResults.push({ task, success: true, newItems });
+              newItemsAll.push(...newItems);
+            } else {
+              taskResults.push({ task, success: false, newItems: [] });
+              this.failedCombos.add(task.key);
+            }
           }
 
           if (!this.isRunning) break;
 
-          await this.wait(CONFIG.postComboScanDelay);
-          this.scanItems();
-          this.checkAndIncrementFirstDiscovery();
+          this.saveFailedCombos();
 
-          const newItems = [...this.itemElementMap.keys()].filter(name => !before.has(name));
+          const icons = taskResults.map(r => r.success ? '✅' : '❌').join('');
+          const uniqueNewItems = [...new Set(newItemsAll)];
 
-          if (newItems.length > 0) {
-            this.logStatus(`✨ Found: ${newItems.join(', ')}!`);
+          if (uniqueNewItems.length > 0) {
+            this.logStatus(`${icons} Found: ${uniqueNewItems.join(', ')}!`);
           } else {
-            tasks.forEach(t => this.failedCombos.add(t.key));
-            this.saveFailedCombos();
-            this.logStatus(`❌ Fail ${progress}`);
+            this.logStatus(`${icons} Fail ${progress}`);
           }
 
-          this.comboCounter += tasks.length;
+          this.comboCounter += taskResults.length;
           await this.wait(CONFIG.interComboDelay);
         } catch (error) {
           console.error('[AutoCombo]', error);
@@ -647,9 +662,6 @@
         const tasks = [{ src: pair1.a, tgt: pair1.b, key: pair1.key, yOffset: 0 }];
         if (pair2) tasks.push({ src: pair2.a, tgt: pair2.b, key: pair2.key, yOffset: -120 });
 
-        const before = new Set(this.itemElementMap.keys());
-        
-        // Log both sets
         const logMsg = tasks.map(t => `${t.src} + ${t.tgt}`).join(' AND ');
         this.logStatus(`🔀 ${logMsg}`);
 
@@ -657,32 +669,49 @@
           const dropX = window.innerWidth / 3;
           const dropY = window.innerHeight / 2;
 
-          for (const task of tasks) {
+          const taskResults = [];
+          const newItemsAll = [];
+
+          for (let tIdx = 0; tIdx < tasks.length && this.isRunning; tIdx++) {
+            const task = tasks[tIdx];
+            const before = new Set(this.itemElementMap.keys());
+
             const srcEl = this.getElement(task.src);
             const tgtEl = this.getElement(task.tgt);
             if (srcEl && tgtEl) {
               await this.simulateCombo(srcEl, tgtEl, dropX, dropY + task.yOffset);
             }
+
+            if (!this.isRunning) break;
+
+            await this.wait(CONFIG.postComboScanDelay);
+            this.scanItems();
+            this.checkAndIncrementFirstDiscovery();
+
+            const newItems = [...this.itemElementMap.keys()].filter(name => !before.has(name));
+            if (newItems.length > 0) {
+              taskResults.push({ task, success: true, newItems });
+              newItemsAll.push(...newItems);
+            } else {
+              taskResults.push({ task, success: false, newItems: [] });
+              this.failedCombos.add(task.key);
+            }
           }
 
           if (!this.isRunning) break;
 
-          await this.wait(CONFIG.postComboScanDelay);
-          this.scanItems();
-          this.checkAndIncrementFirstDiscovery();
+          this.saveFailedCombos();
 
-          const newItems = [...this.itemElementMap.keys()].filter(name => !before.has(name));
+          const icons = taskResults.map(r => r.success ? '✅' : '❌').join('');
+          const uniqueNewItems = [...new Set(newItemsAll)];
 
-          if (newItems.length > 0) {
-            this.logStatus(`✨ Found: ${newItems.join(', ')}!`);
+          if (uniqueNewItems.length > 0) {
+            this.logStatus(`${icons} Found: ${uniqueNewItems.join(', ')}!`);
           } else {
-            // Only flag as failed if nothing generated from the batch to prevent false failures
-            tasks.forEach(t => this.failedCombos.add(t.key));
-            this.saveFailedCombos();
-            this.logStatus(`❌ ${logMsg}`);
+            this.logStatus(`${icons} ${logMsg}`);
           }
 
-          this.comboCounter += tasks.length;
+          this.comboCounter += taskResults.length;
           await this.wait(CONFIG.interComboDelay);
         } catch (error) {
           console.error('[AutoCombo]', error);
