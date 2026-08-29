@@ -8,7 +8,7 @@ An automated helper and control panel for **Infinite Craft**. Automate element m
 
 * **🎯 Target Element Mode**: Systematically pairs a chosen target element against all valid items in your sidebar.
 * **🎲 Random Loop Mode**: Continuously merges random item pairs for passive discovery.
-* **👯 Singles & Doubles Modes**: Run single combinations or queue double combinations simultaneously to double execution speed.
+* **👯 Singles, Doubles & Triples Modes**: Run single combinations, queue double combinations simultaneously, or use **Triple Merge Mode** to merge three elements at once for maximum speed and discovery.
 * **⚡ 6 Speed Presets**: Granular delay controls ranging from `Slow` (400ms) down to `Nitro` (25ms).
 * **🧠 Smart Fail Persistence**: Saves non-working item combinations to `localStorage` so the script never wastes time retrying them.
 * **🏆 First Discovery Counter**: Tracks and saves your total count of unique First Discoveries using a live DOM observer.
