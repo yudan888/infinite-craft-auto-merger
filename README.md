@@ -1,4 +1,4 @@
-# ✨ Infinite Craft Auto Merger (V6.1)
+# ✨ Infinite Craft Auto Merger (V6.2)
 
 An automated helper and control panel for **Infinite Craft**. Automate element merging, target specific items, track First Discoveries, avoid duplicate failed combinations, and watch YouTube videos right inside your browser window.
 
