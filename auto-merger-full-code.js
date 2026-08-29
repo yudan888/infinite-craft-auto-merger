@@ -1,3 +1,12 @@
+// ==UserScript==
+// @name         Infinite Craft Auto Merger
+// @namespace    https://github.com/yudan888/infinite-craft-auto-merger
+// @version      6.2
+// @description  Automated helper and control panel for Infinite Craft
+// @author       yudan888
+// @match        https://neal.fun/infinite-craft/
+// @grant        none
+// ==UserScript==
 (() => {
   const CONFIG = {
     itemSelector: '.items .item',
