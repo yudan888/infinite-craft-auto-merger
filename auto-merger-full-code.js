@@ -74,7 +74,7 @@
       this.setupEvents();
       this.observeDOM();
       this.scanItems();
-      this.logStatus('Ready V6.1 (Per-Combo Tracking)');
+      this.logStatus('Ready V6.2 (Triples & Per-Combo Tracking)');
     }
 
     injectStyles() {
@@ -160,7 +160,7 @@
       this.panel.id = CONFIG.panelId;
       this.panel.innerHTML = `
         <div class="auto-combo-drag-bar" id="auto-combo-drag-handle">
-          <span class="auto-combo-title-text">⠿ ✨ Auto Combiner V6.1</span>
+          <span class="auto-combo-title-text">⠿ ✨ Auto Combiner V6.2</span>
           <div class="auto-combo-win-controls">
             <button class="auto-combo-win-btn" id="auto-combo-minimize-btn" title="Minimize/Maximize">–</button>
             <button class="auto-combo-win-btn" id="auto-combo-close-btn" title="Close">×</button>
@@ -182,6 +182,7 @@
             <select id="${CONFIG.modeSelectId}" style="flex:1;">
               <option value="singles">🧍‍♂️ Singles</option>
               <option value="doubles">👯 Doubles</option>
+              <option value="triples">👨‍👩‍👧 Triples</option>
             </select>
           </div>
 
@@ -539,17 +540,19 @@
       }
 
       this.isRunning = true;
-      const isDoubles = this.modeSelect.value === 'doubles';
-      const step = isDoubles ? 2 : 1;
+      const mode = this.modeSelect.value;
+      const step = mode === 'triples' ? 3 : (mode === 'doubles' ? 2 : 1);
 
       this.logStatus(`🚀 Starting Target... (${items.length})`);
 
       for (let i = 0; i < items.length && this.isRunning; i += step) {
         const item1Name = items[i];
-        const item2Name = isDoubles && (i + 1 < items.length) ? items[i + 1] : null;
+        const item2Name = (mode === 'doubles' || mode === 'triples') && (i + 1 < items.length) ? items[i + 1] : null;
+        const item3Name = mode === 'triples' && (i + 2 < items.length) ? items[i + 2] : null;
 
         const comboKey1 = this.getComboKey(targetName, item1Name);
         const comboKey2 = item2Name ? this.getComboKey(targetName, item2Name) : null;
+        const comboKey3 = item3Name ? this.getComboKey(targetName, item3Name) : null;
 
         let tasks = [];
         if (!this.failedCombos.has(comboKey1)) {
@@ -558,12 +561,14 @@
         if (item2Name && !this.failedCombos.has(comboKey2)) {
           tasks.push({ source: item2Name, target: targetName, key: comboKey2, yOffset: -120 });
         }
+        if (item3Name && !this.failedCombos.has(comboKey3)) {
+          tasks.push({ source: item3Name, target: targetName, key: comboKey3, yOffset: -240 });
+        }
 
         if (tasks.length === 0) continue;
 
-        const progress = isDoubles && tasks.length > 1 
-          ? `${i + 1}-${i + 2}/${items.length}` 
-          : `${i + 1}/${items.length}`;
+        const maxIndex = Math.min(i + step, items.length);
+        const progress = step > 1 ? `${i + 1}-${maxIndex}/${items.length}` : `${i + 1}/${items.length}`;
         const logNames = tasks.map(t => t.source).join(' & ');
         this.logStatus(`⏳ ${progress}: ${logNames}`);
 
@@ -633,7 +638,7 @@
 
       this.isRunning = true;
       this.isRandomLooping = true;
-      const isDoubles = this.modeSelect.value === 'doubles';
+      const mode = this.modeSelect.value;
 
       this.logStatus('🎲 Randomizing...');
 
@@ -657,12 +662,14 @@
         }
 
         const pair1 = getValidPair(validItems);
-        const pair2 = isDoubles ? getValidPair(validItems) : null;
+        const pair2 = (mode === 'doubles' || mode === 'triples') ? getValidPair(validItems) : null;
+        const pair3 = mode === 'triples' ? getValidPair(validItems) : null;
 
         const tasks = [{ src: pair1.a, tgt: pair1.b, key: pair1.key, yOffset: 0 }];
         if (pair2) tasks.push({ src: pair2.a, tgt: pair2.b, key: pair2.key, yOffset: -120 });
+        if (pair3) tasks.push({ src: pair3.a, tgt: pair3.b, key: pair3.key, yOffset: -240 });
 
-        const logMsg = tasks.map(t => `${t.src} + ${t.tgt}`).join(' AND ');
+        const logMsg = tasks.map(t => `${t.src}+${t.tgt}`).join(' | ');
         this.logStatus(`🔀 ${logMsg}`);
 
         try {
