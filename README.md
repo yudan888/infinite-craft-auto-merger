@@ -52,3 +52,25 @@ Create a new browser bookmark, set the URL to `javascript:` followed by your min
 * **🗑️ Clear Fails**: Clears saved failed combinations from local storage.
 * **🔊 Mute Game**: Silences audio elements and Howler.js audio instances.
 * **⛔ Stop**: Halts all active automated loops.
+
+# 🐛 Known Issues & Troubleshooting
+
+## Canvas Overcrowding / Script Freezing
+
+**Issue:** 
+High-speed combination loops can occasionally cause elements to spawn uncontrollably across the workspace, resulting in script unresponsiveness.
+
+**Resolution:**
+1. Refresh the browser page (`F5` or `Ctrl + R`).
+2. Re-open the Developer Console (`F12`).
+3. Paste and run the auto-merger script to resume operation.
+
+---
+
+## ⏱️ Delayed First Discoveries Counter
+
+**Issue:** 
+The First Discoveries counter or visual notification may lag behind active element creation, especially during rapid combination loops.
+
+**Resolution:**
+No action required. The background DOM observer automatically catches up and updates your tally as soon as the game syncs page elements.
