@@ -20,13 +20,19 @@ An automated helper and control panel for **Infinite Craft**. Automate element m
 
 ## 📦 How to Use
 
-### Option 1: Developer Console
+### Option 1: Tampermonkey / Userscript (Recommended)
+1. Install a userscript manager browser extension like **Tampermonkey** or **Violentmonkey**.
+2. Create a new userscript and paste the full code from `auto-merger-full-code.js`.
+3. Save the script and navigate to [Infinite Craft](https://neal.fun/infinite-craft/).
+4. The auto-merger control panel will load automatically every time you open the game.
+
+### Option 2: Developer Console
 1. Navigate to [Infinite Craft](https://neal.fun/infinite-craft/).
 2. Press `F12` (or right-click and select **Inspect**) to open Developer Tools.
 3. Switch to the **Console** tab.
 4. Paste the full code from `auto-merger-full-code.js` and press `Enter`.
 
-### Option 2: Bookmarklet (Optional)
+### Option 3: Bookmarklet (Optional)
 Create a new browser bookmark, set the URL to `javascript:` followed by your minified code, and click it whenever you are on the Infinite Craft page.
 
 ---
