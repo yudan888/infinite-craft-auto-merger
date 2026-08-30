@@ -80,3 +80,13 @@ The First Discoveries counter or visual notification may lag behind active eleme
 
 **Resolution:**
 No action required. The background DOM observer automatically catches up and updates your tally as soon as the game syncs page elements.
+
+---
+
+## 🌙 Dark Mode Not Working
+
+**Issue:** 
+Dark mode doesn't affect the panel so the panel still stays white.
+
+**Resolution:**
+No action required. I'll probably be fixing this bug in the next update! 
