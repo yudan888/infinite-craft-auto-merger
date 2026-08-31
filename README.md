@@ -1,4 +1,4 @@
-# ✨ Infinite Craft Auto Merger (V6.2)
+# ✨ Infinite Craft Auto Merger (V6.3.1)
 
 An automated helper and control panel for **Infinite Craft**. Automate element merging, target specific items, track First Discoveries, avoid duplicate failed combinations, and watch YouTube videos right inside your browser window.
 
@@ -15,6 +15,7 @@ An automated helper and control panel for **Infinite Craft**. Automate element m
 * **🏷️ Ignore Numbers Filter**: Exclude numeric/numbered items from combinations with a single checkbox.
 * **📺 Embedded YouTube Player**: Paste any YouTube video URL or ID into the panel to watch videos while automating.
 * **🔊 Audio & UI Controls**: Toggle game mute instantly, drag the panel around your screen, or minimize it to stay out of your workspace.
+* **🌙 Dynamic Dark Mode Syncing**: Dark mode compatibility, when you enable the mode the panel automatically syncs to the setting.
 
 ---
 
@@ -81,12 +82,3 @@ The First Discoveries counter or visual notification may lag behind active eleme
 **Resolution:**
 No action required. The background DOM observer automatically catches up and updates your tally as soon as the game syncs page elements.
 
----
-
-## 🌙 Dark Mode Not Working
-
-**Issue:** 
-Dark mode doesn't affect the panel so the panel still stays white.
-
-**Resolution:**
-No action required. I'll probably be fixing this bug in the next update! 
