@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Infinite Craft Auto Merger
 // @namespace    https://github.com/yudan888/infinite-craft-auto-merger
-// @version      6.2
-// @description  Automated helper and control panel for Infinite Craft
+// @version      6.3.1
+// @description  Automated helper and control panel for Infinite Craft (Now with Auto Dark Mode & Performance Fix)
 // @author       yudan888
 // @match        https://neal.fun/infinite-craft/
 // @grant        none
@@ -83,7 +83,7 @@
       this.setupEvents();
       this.observeDOM();
       this.scanItems();
-      this.logStatus('Ready V6.2 (Triples & Per-Combo Tracking)');
+      this.logStatus('Ready V6.3.1 (Performance Fixed)');
     }
 
     injectStyles() {
@@ -98,12 +98,14 @@
           border-radius:6px;font:12px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
           box-shadow:0 3px 10px #0004;display:flex;flex-direction:column;color:#111;
           overflow:hidden;
+          transition: background 0.3s, border-color 0.3s, color 0.3s;
         }
         .auto-combo-drag-bar {
           display:flex;align-items:center;justify-content:space-between;
           background:rgba(150, 150, 150, 0.9);backdrop-filter:blur(5px);
           color:#e0e0e0;padding:5px 8px;cursor:grab;font-weight:bold;
           user-select:none;font-size:11px;border-bottom:1px solid rgba(0,0,0,0.2);
+          transition: background 0.3s;
         }
         .auto-combo-drag-bar:active { cursor:grabbing; }
         .auto-combo-title-text { color:#e0e0e0; }
@@ -122,7 +124,8 @@
         }
         #${CONFIG.panelId} * { box-sizing:border-box }
         #${CONFIG.panelId} input,#${CONFIG.panelId} button,#${CONFIG.panelId} select {
-          width:100%;padding:6px 8px;font-size:12px;border:1px solid #bbb;border-radius:4px
+          width:100%;padding:6px 8px;font-size:12px;border:1px solid #bbb;border-radius:4px;
+          transition: background 0.3s, color 0.3s, border-color 0.3s;
         }
         #${CONFIG.panelId} button { cursor:pointer;background:#eee }
         #${CONFIG.startButtonId} { background:#4caf50!important;color:white }
@@ -133,20 +136,23 @@
         #${CONFIG.stopButtonId} { background:#f44336!important;color:white }
         #${CONFIG.suggestionBoxId} {
           display:none;position:absolute;z-index:10011;max-height:120px;overflow-y:auto;
-          background:white;border:1px solid #aaa;box-shadow:0 3px 6px #0003
+          background:white;border:1px solid #aaa;box-shadow:0 3px 6px #0003;
         }
         .${CONFIG.suggestionItemClass} { padding:5px 8px;cursor:pointer }
         .${CONFIG.suggestionItemClass}:hover { background:#07f;color:white }
         #${CONFIG.statusBoxId} {
           padding:4px;text-align:center;font-size:10px;background:#f9f9f9;
           border:1px solid #e5e5e5;border-radius:3px;min-height:24px;word-wrap:break-word;
+          transition: background 0.3s, border-color 0.3s;
         }
         #${CONFIG.firstDiscoveryBoxId} {
           padding:4px;text-align:center;font-weight:bold;font-size:11px;
-          background:#fff8e1;border:1px solid #ffe082;border-radius:3px;color:#f57f17
+          background:#fff8e1;border:1px solid #ffe082;border-radius:3px;color:#f57f17;
+          transition: background 0.3s, border-color 0.3s;
         }
         .yt-wrapper {
-          display:flex;flex-direction:column;gap:4px;background:#eee;padding:4px;border-radius:4px
+          display:flex;flex-direction:column;gap:4px;background:#eee;padding:4px;border-radius:4px;
+          transition: background 0.3s;
         }
         #${CONFIG.ytPlayerId} {
           width:100%;height:110px;border:none;border-radius:3px;background:#000
@@ -156,6 +162,40 @@
         .${CONFIG.debugMarkerClass} {
           position:absolute;width:8px;height:8px;border-radius:50%;
           z-index:10012;pointer-events:none;transition:opacity .3s
+        }
+          
+        /* --- DYNAMIC DARK MODE STYLES --- */
+        #${CONFIG.panelId}.auto-combo-dark {
+          background: rgba(30, 30, 30, 0.97);
+          border-color: #444;
+          color: #eee;
+        }
+        #${CONFIG.panelId}.auto-combo-dark .auto-combo-drag-bar {
+          background: rgba(45, 45, 45, 0.9);
+          border-bottom-color: #222;
+        }
+        #${CONFIG.panelId}.auto-combo-dark input,
+        #${CONFIG.panelId}.auto-combo-dark select,
+        #${CONFIG.panelId}.auto-combo-dark button {
+          background: #333;
+          color: #eee;
+          border-color: #555;
+        }
+        #${CONFIG.panelId}.auto-combo-dark #${CONFIG.suggestionBoxId} {
+          background: #222;
+          border-color: #444;
+          color: #eee;
+        }
+        #${CONFIG.panelId}.auto-combo-dark #${CONFIG.statusBoxId} {
+          background: #2a2a2a;
+          border-color: #444;
+        }
+        #${CONFIG.panelId}.auto-combo-dark #${CONFIG.firstDiscoveryBoxId} {
+          background: #3a2a1a;
+          border-color: #553311;
+        }
+        #${CONFIG.panelId}.auto-combo-dark .yt-wrapper {
+          background: #2a2a2a;
         }
       `;
       document.head.appendChild(style);
@@ -169,7 +209,7 @@
       this.panel.id = CONFIG.panelId;
       this.panel.innerHTML = `
         <div class="auto-combo-drag-bar" id="auto-combo-drag-handle">
-          <span class="auto-combo-title-text">⠿ ✨ Auto Combiner V6.2</span>
+          <span class="auto-combo-title-text">⠿ ✨ Auto Combiner V6.3.1</span>
           <div class="auto-combo-win-controls">
             <button class="auto-combo-win-btn" id="auto-combo-minimize-btn" title="Minimize/Maximize">–</button>
             <button class="auto-combo-win-btn" id="auto-combo-close-btn" title="Close">×</button>
@@ -508,14 +548,53 @@
       return changed;
     }
 
+    // --- DARK MODE LOGIC ---
+    isGameDarkMode() {
+      const container = document.querySelector(CONFIG.gameContainerSelector);
+      return document.documentElement.classList.contains('dark-mode') ||
+             document.body.classList.contains('dark-mode') ||
+             (container && container.classList.contains('dark-mode'));
+    }
+
+    checkAndApplyDarkMode() {
+      if (!this.panel) return;
+      if (this.isGameDarkMode()) {
+        this.panel.classList.add('auto-combo-dark');
+      } else {
+        this.panel.classList.remove('auto-combo-dark');
+      }
+    }
+    // -----------------------
+
     observeDOM() {
       const container = document.querySelector(CONFIG.gameContainerSelector) || document.body;
+      
+      // Check immediately on initialization
+      this.checkAndApplyDarkMode();
+
       this.observer = new MutationObserver(() => {
-        this.checkAndIncrementFirstDiscovery();
         clearTimeout(this.scanTimer);
-        this.scanTimer = setTimeout(() => this.scanItems(), CONFIG.scanDebounceDelay);
+        
+        // Move everything inside the debounce timer
+        this.scanTimer = setTimeout(() => {
+          this.checkAndApplyDarkMode();
+          this.checkAndIncrementFirstDiscovery();
+          this.scanItems();
+        }, CONFIG.scanDebounceDelay);
       });
-      this.observer.observe(container, { childList: true, subtree: true, characterData: true });
+      
+      // Add attribute tracking to the observer to specifically monitor Dark Mode class changes
+      const obsOptions = { 
+        childList: true, 
+        subtree: true, 
+        characterData: true, 
+        attributes: true, 
+        attributeFilter: ['class'] 
+      };
+      
+      this.observer.observe(container, obsOptions);
+      if (container !== document.body) this.observer.observe(document.body, obsOptions);
+      this.observer.observe(document.documentElement, obsOptions);
     }
 
     getElement(name) {
